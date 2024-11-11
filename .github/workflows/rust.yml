@@ -13,7 +13,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: main
-        sparse: true
+        sparse-checkout: .
         # path: 'home/runner/work/denpk2/denpk2/target'
     - name: Build
       run: cargo build --release
