@@ -16,6 +16,6 @@ jobs:
         sparse: true
         path: 'home/runner/work/denpk2/denpk2/target'
     - name: Build
-      run: cargo build --verbose
+      run: cargo build
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test
