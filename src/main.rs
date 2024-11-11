@@ -1,10 +1,9 @@
-use std::{env, io::Write};
+use std::env;
 
-use pytools::marshal;
+// use decompyle_rs::{disassemble, marshal};
 mod mmap;
 mod npk;
 mod nxs;
-mod opcode;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data = mmap::new_path(&env::args().nth(1).ok_or("No NXPK file path given")?)?;
@@ -16,37 +15,40 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("{:?}", entry);
 
         let id = entry.id;
+        let output = extracted_path.join(format!("{:08x}", id));
 
         let unpacked = entry.unpack_data(data)?;
-        let (code, header) = if &unpacked[0..8] == nxs::NXS_MAGIC {
-            (nxs::unpack(&unpacked)?, marshal::PYC_HEADER)
-        } else if unpacked[0..4] == marshal::PYC_HEADER[0..4] {
-            (unpacked[16..].to_vec(), unpacked[0..16].try_into()?)
-        } else {
-            let output = extracted_path.join(format!("blobs/{:08x}", id));
-            std::fs::create_dir_all(output.parent().ok_or("No parent")?)?;
+        std::fs::write(&output, &unpacked)?;
 
-            std::fs::write(&output, &unpacked)?;
-            continue;
-        };
+        // let pyc = nxs::unpack(&unpacked)?;
 
-        let py_object = marshal::PyObject::read_root(&code)?;
-        let py_object = opcode::map_opcode(py_object)?;
+        // let py_object = marshal::PyObject::read_root(&pyc)?;
 
-        let marshal::PyObject::Code { filename, .. } = py_object.as_ref() else {
-            return Err("Unexpected object type".into());
-        };
+        // match py_object.as_ref() {
+        //     marshal::PyObject::Code {
+        //         filename,
+        //         arg_count,
+        //         pos_only_arg_count,
+        //         kw_only_arg_count,
+        //         stacksize,
+        //         flags,
+        //         code,
+        //         consts,
+        //         names,
+        //         locals_plus_names,
+        //         locals_plus_kinds,
+        //         name,
+        //         qualname,
+        //         firstlineno,
+        //         linetable,
+        //         exceptiontable,
+        //     } => {
+        //         println!("{}", filename.as_str().unwrap());
+        //     }
+        //     _ => {}
+        // }
 
-        // replace windows backslashes with forward slashes
-        let filename = filename.as_str().map(|s| s.replace("\\", "/"));
-        let output = extracted_path.join(format!("{}.pyc", filename.ok_or("No filename")?));
-
-        std::fs::create_dir_all(output.parent().ok_or("No parent")?)?;
-
-        let file = std::fs::File::create(&output)?;
-        let mut writer = std::io::BufWriter::new(file);
-        writer.write_all(header)?;
-        py_object.write_root(&mut writer, false)?;
+        // std::fs::write(&output, &pyc)?;
     }
 
     Ok(())
