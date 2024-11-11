@@ -1,30 +1,19 @@
-name: Build and Test
- 
+name: Rust
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
- 
+    branches: [ "main" ]
+env:
+  CARGO_TERM_COLOR: always
 jobs:
   build:
     runs-on: ubuntu-latest
- 
-    strategy:
-      matrix:
-        target: [ 'x86_64-unknown-linux-musl', 'x86_64-pc-windows-gnu', 'x86_64-apple-darwin' ]
- 
     steps:
-    - uses: actions/checkout@v2
- 
-    - name: Set up Rust
-      uses: actions-rs/toolchain@v1
+    - uses: actions/checkout@v4
       with:
-        toolchain: stable
-        override: true
- 
+       sparse-checkout: .
     - name: Build
-      run: cargo build --target=${{ matrix.target }} --release
- 
-    - name: Test
-      run: cargo test --target=${{ matrix.target }}
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
