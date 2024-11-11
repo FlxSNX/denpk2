@@ -12,7 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-       sparse-checkout: .
+        ref: main
+        sparse: true
+        path: 'home/runner/work/denpk2/denpk2/target'
     - name: Build
       run: cargo build --verbose
     - name: Run tests
